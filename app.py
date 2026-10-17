@@ -21,10 +21,16 @@ from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
-API_ID = int(os.environ.get('API_ID', '36879151'))
-API_HASH = os.environ.get('API_HASH', '45360a236343352099ffa29570f48700')
-SESSION_STRING = os.environ.get('SESSION_STRING', '1BVtsOI4Bu2aqYwbxzr4l6E-jImpT8xpCD9XryD71Qq8bcPVb1H1ebSanXLS_PWl1OaJXsofxC5NgstzMBVhuyn66KA6e18xf_PinLp24alIuAFu-wWHkwsdyWyH6lS1UjSmBIdOlosAsksijT32BXL912p5_FOnssgSjTGamz1oJZtrye-1vzqE9v3DPh-Rrz4uva5eF_lR7vaZxiJCGuLjDz0eBrGMVZuJaoTpm1HXcqUgs4QQPUthAkiA6etphcONP4IwiVyEtzBcYzb8MSPN7TvlQazOihV5rx_hN9uMmST58fNTpAY5mDnEZ6GBkZGPTld-fXxCjP2YjMzsfL7BB15vqoLE=')
+# ============================================
+# 🔐 CONFIG — YAHA APNI SESSION DAALO
+# ============================================
+API_ID = 36879151
+API_HASH = "45360a236343352099ffa29570f48700"
+SESSION_STRING = "1BVtsOI4Bu2aqYwbxzr4l6E-jImpT8xpCD9XryD71Qq8bcPVb1H1ebSanXLS_PWl1OaJXsofxC5NgstzMBVhuyn66KA6e18xf_PinLp24alIuAFu-wWHkwsdyWyH6lS1UjSmBIdOlosAsksijT32BXL912p5_FOnssgSjTGamz1oJZtrye-1vzqE9v3DPh-Rrz4uva5eF_lR7vaZxiJCGuLjDz0eBrGMVZuJaoTpm1HXcqUgs4QQPUthAkiA6etphcONP4IwiVyEtzBcYzb8MSPN7TvlQazOihV5rx_hN9uMmST58fNTpAY5mDnEZ6GBkZGPTld-fXxCjP2YjMzsfL7BB15vqoLE="
 
+# ============================================
+# BAQI CODE — CHHEDNA MAT
+# ============================================
 proxy_pool = []
 proxy_last_fetch = 0
 
@@ -34,20 +40,18 @@ def fetch_proxies():
     if time.time() - proxy_last_fetch < 300 and proxy_pool:
         return proxy_pool
     proxies = []
-    sources = [
-        "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=3000",
-        "https://www.proxy-list.download/api/v1/get?type=http",
-    ]
-    for url in sources:
-        try:
-            r = requests.get(url, timeout=5)
-            if r.status_code == 200:
-                for line in r.text.strip().split('\n'):
-                    line = line.strip()
-                    if line and ':' in line and len(line) < 25:
-                        proxies.append(line)
-        except:
-            pass
+    try:
+        r = requests.get(
+            "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=30000",
+            timeout=5
+        )
+        if r.status_code == 200:
+            for line in r.text.strip().split('\n'):
+                line = line.strip()
+                if line and ':' in line and len(line) < 25:
+                    proxies.append(line)
+    except:
+        pass
     proxies = list(set(proxies))
     if proxies:
         proxy_pool = proxies
@@ -79,8 +83,8 @@ client_status = {"authorized": False, "error": None, "user": None}
 
 def create_client():
     global client
-    if not SESSION_STRING:
-        client_status["error"] = "SESSION_STRING env variable is empty!"
+    if not SESSION_STRING or SESSION_STRING == "YAHAN_APNI_SESSION_PASTE_KARO":
+        client_status["error"] = "SESSION_STRING not set in code!"
         return None
     try:
         client = TelegramClient(
@@ -108,7 +112,7 @@ async def init_client():
         await client.connect()
         if not await client.is_user_authorized():
             client_status["authorized"] = False
-            client_status["error"] = "SESSION_STRING invalid/expired. Generate new one!"
+            client_status["error"] = "SESSION_STRING invalid/expired!"
             return False
         me = await client.get_me()
         client_status["authorized"] = True
@@ -188,7 +192,7 @@ async def get_entity(identifier, retry=0):
         raise Exception(f"Connection failed: {str(e)}")
     try:
         if not await client.is_user_authorized():
-            raise Exception("SESSION_STRING invalid/expired. Generate new session!")
+            raise Exception("SESSION_STRING invalid/expired!")
     except Exception as e:
         raise Exception(f"Auth failed: {str(e)}")
     try:
@@ -208,13 +212,13 @@ async def get_entity(identifier, retry=0):
     except ValueError:
         raise Exception(f"Invalid identifier: {identifier}")
     except SessionRevokedError:
-        raise Exception("SESSION_STRING revoked! Generate new one.")
+        raise Exception("SESSION_STRING revoked!")
     except Exception as e:
         err = str(e)
         if "Cannot find any entity" in err:
             raise Exception(f"Entity not found: {identifier}")
         if "not authorized" in err.lower():
-            raise Exception("SESSION_STRING expired! Generate new one.")
+            raise Exception("SESSION_STRING expired!")
         if "Could not find the input entity" in err:
             raise Exception(f"Cannot resolve: {identifier}")
         raise Exception(err)
@@ -627,6 +631,7 @@ async def extract_intel(identifier):
 def home():
     auth_status = "✅ Authorized" if client_status["authorized"] else "❌ Not Authorized"
     auth_color = "#0f0" if client_status["authorized"] else "#f00"
+    err = client_status.get('error') or 'None'
     return f"""
     <!DOCTYPE html>
     <html>
@@ -642,12 +647,16 @@ def home():
         <h3>🎯 ELITE INTEL EDITION</h3>
         <div class="box">
             <p style="color:{auth_color}">🔐 Client Status: {auth_status}</p>
+            <p style="color:#888;font-size:12px;">Error: {err}</p>
+            <p style="color:#888;font-size:12px;">Session length: {len(SESSION_STRING)} chars</p>
+            <p style="color:#888;font-size:12px;">API_ID: {API_ID}</p>
             <p>🛡️ Proxies: {len(proxy_pool)} | 💾 Cache: {len(cache)}</p>
         </div>
         <div class="box">
             <code>GET /intel?username=USERNAME</code>
             <code>GET /chatid?username=USERNAME</code>
             <code>GET /health</code>
+            <code>GET /reconnect</code>
         </div>
         <p style="color:#f0f;">@BRONX_ULTRA</p>
     </body></html>
@@ -663,7 +672,7 @@ def intel_endpoint():
         return jsonify({
             "status": "error",
             "message": client_status.get("error") or "Client not authorized",
-            "fix": "Generate new SESSION_STRING and update env variable",
+            "session_length": len(SESSION_STRING),
             "credit": "@BRONX_ULTRA"
         }), 401
     key = f"intel:{identifier.lower()}"
@@ -709,6 +718,8 @@ def health():
         "client_authorized": client_status["authorized"],
         "client_error": client_status.get("error"),
         "client_user": client_status.get("user"),
+        "session_length": len(SESSION_STRING),
+        "api_id": API_ID,
         "cached": len(cache),
         "proxies": len(proxy_pool),
         "credit": "@BRONX_ULTRA"
@@ -729,17 +740,17 @@ def reconnect():
         "authorized": client_status["authorized"],
         "error": client_status.get("error"),
         "user": client_status.get("user"),
+        "session_length": len(SESSION_STRING),
         "credit": "@BRONX_ULTRA"
     })
 
 
-if __name__ == "__main__":
-    fetch_proxies()
-    create_client()
-    ok = loop.run_until_complete(init_client())
-    if ok:
-        print("✅ BRONX ULTRA v4.1 - READY")
-    else:
-        print(f"❌ {client_status.get('error')}")
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
+fetch_proxies()
+create_client()
+try:
+    loop.run_until_complete(init_client())
+except Exception as e:
+    print(f"Init error: {e}")
+
+port = int(os.environ.get('PORT', 10000))
+app.run(host='0.0.0.0', port=port)

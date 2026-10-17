@@ -21,7 +21,7 @@ from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
-API_ID = int(os.environ.get('API_ID', '36879151')
+API_ID = int(os.environ.get('API_ID', '36879151'))
 API_HASH = os.environ.get('API_HASH', '45360a236343352099ffa29570f48700')
 SESSION_STRING = os.environ.get('SESSION_STRING', '1BVtsOI4Bu2aqYwbxzr4l6E-jImpT8xpCD9XryD71Qq8bcPVb1H1ebSanXLS_PWl1OaJXsofxC5NgstzMBVhuyn66KA6e18xf_PinLp24alIuAFu-wWHkwsdyWyH6lS1UjSmBIdOlosAsksijT32BXL912p5_FOnssgSjTGamz1oJZtrye-1vzqE9v3DPh-Rrz4uva5eF_lR7vaZxiJCGuLjDz0eBrGMVZuJaoTpm1HXcqUgs4QQPUthAkiA6etphcONP4IwiVyEtzBcYzb8MSPN7TvlQazOihV5rx_hN9uMmST58fNTpAY5mDnEZ6GBkZGPTld-fXxCjP2YjMzsfL7BB15vqoLE=')
 
